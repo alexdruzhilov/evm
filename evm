@@ -21,7 +21,7 @@ DEFAULT_INSTALL_LOCATION=$EVM_HOME"/erlang_versions/"
 if [[ -f "$EVM_HOME/evm_config/erlang_default" ]]
 then
   default=$(cat "$EVM_HOME/evm_config/erlang_default")
-  export PATH="$PATH:$DEFAULT_INSTALL_LOCATION$FILE_PREFIX$default/bin"
+  export PATH="$DEFAULT_INSTALL_LOCATION$FILE_PREFIX$default/bin:$PATH"
 fi
 
 function list_available_erl_versions() {
@@ -208,13 +208,10 @@ function evm_uninstall() {
 # available in the PATH
 # @params: erlang_version
 function evm_use() {
-  if [[ -d $DEFAULT_INSTALL_LOCATION$FILE_PREFIX$1 ]]
+  ERL_PATH=$DEFAULT_INSTALL_LOCATION$FILE_PREFIX$1
+  if [[ -d $ERL_PATH ]] && [[ ":$PATH:" != *":$ERL_PATH:"* ]];
   then
-    PATH="$(printf "$PATH" \
-         | awk -v RS=: -v ORS=: "/${EVM_HOME//\//\/}/ {next} {print}" \
-         | sed -e 's#:$##')"
-
-    export PATH=$DEFAULT_INSTALL_LOCATION$FILE_PREFIX$1/bin:$PATH
+    export PATH=$ERL_PATH/bin:$PATH
   else
     echo "$1 - Version not installed. Use 'evm install $1' to install it"
   fi
@@ -223,14 +220,11 @@ function evm_use() {
 # This function will set this erlang version as system default.
 # @params: erlang_version
 function evm_default() {
-  if [[ -d $DEFAULT_INSTALL_LOCATION$FILE_PREFIX$1 ]]
+  ERL_PATH=$DEFAULT_INSTALL_LOCATION$FILE_PREFIX$1
+  if [[ -d $ERL_PATH ]] && [[ ":$PATH:" != *":$ERL_PATH:"* ]];
   then
     echo $1 > $EVM_HOME/evm_config/erlang_default
-
-    PATH="$(printf "$PATH" \
-          | awk -v RS=: -v ORS=: "/${EVM_HOME//\//\/}/ {next} {print}" \
-          | sed -e 's#:$##')"
-    export PATH=$DEFAULT_INSTALL_LOCATION$FILE_PREFIX$1/bin:$PATH
+    export PATH=$ERL_PATH/bin:$PATH
   else
     echo "$1 is not installed yet. Use 'evm install $1' to install it"    
   fi
